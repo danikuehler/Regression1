@@ -1,0 +1,114 @@
+---
+title: "danikue.com demo"
+author: 'Danielle Kuehler'
+output:
+  word_document:
+    fig_height: 4.5
+    fig_width: 6
+  html_document:
+    fig_height: 3
+    fig_width: 5
+  pdf_document:
+    fig_height: 4.5
+    fig_width: 6
+---
+
+```{r, setup, include=FALSE}
+require(mosaic)   # Load additional packages here 
+require(readr)
+require(stargazer)
+
+trellis.par.set(theme=theme.mosaic()) # change default color scheme for lattice
+knitr::opts_chunk$set(
+  tidy=TRUE,     # display code as typed
+  size="small")   # slightly smaller font for code
+```
+
+
+# Example 1
+The following equation explains salaries of CEOs in terms of annual firm sales, return on equity (roe, in percentage form), and return on the firm's stock (ros, in percentage form):
+
+$$
+\log(salary)=\beta_0+\beta_1\log(sales) + \beta_2 roe + \beta_3 ros + u
+$$
+
+* Using data in "CEO" to estimate this model. Reporting the regression table using `summary`.
+
+```{r}
+#Load libraries
+library(readxl)
+library(knitr)
+library(dplyr)
+library(ggrepel)
+library(readxl)
+library(ggplot2)
+library(tidyverse)
+library(xtable)
+library(stargazer)
+library(mosaic)
+
+#From files
+ceo_data <- read_excel(path = "ceo.xls")
+houseprice <- read_excel(path = "houseprice.xls")
+
+Q1_model1 <- lm(formula = log(salary) ~-1 + log(sales) + roe + ros, data=ceo_data)
+
+#Showing regression with data
+visreg::visreg(Q1_model1)
+
+```
+
+```{r}
+#Regression table report using summary
+summary(Q1_model1)
+```
+* Testing the null hypothesis that ros has no effect on salary using the estimated model.
+
+```{r}
+#CEO data
+stargazer(Q1_model1, type = "text", header=FALSE)
+```
+
+Conclusion: Ros is statistically significant, p<.01, therefore we reject the null hypothesis, and include ros in a final model.
+
+***
+
+
+# Example 2
+The data "Houseprice" are for houses that sold during 1981 in North Andover, Massachusetts. 1981 was the year construction began on a local garbage incinerator
+
+* Evaluating the effects of the incinerator location on housing price
+$$
+\log(price)=\beta_0+\beta_1\log(dist)+u,
+$$
+* where `price` is housing price in dollars and `dist` is the distance from the house to the incinerator measured in feet.
+
+Prediction: We expect $\beta_1$ to be positive, because the further the house is from the incinerator, the higher the price.
+
+```{r}
+library(readxl)
+houseprice <- read_excel(path = "houseprice.xls", sheet=1, col_names = TRUE)
+Q2_model1 <- lm(formula = log(price) ~ log(dist), data = houseprice)
+
+#Model for houseprice and distance from incinerator
+visreg::visreg(Q2_model1)
+
+#Data on price and dist
+stargazer(Q2_model1, type = "text", ci = TRUE, ci.level = .9)
+```
+
+* Adding variables $\log(intst)$, $\log(area)$, $\log(land)$, $rooms$, $baths$ and $age$ where `intst` is distance from the home to the interstate, `area` is square footageof the house, `land` is the lot size in square feet, `rooms` is total number of rooms, `baths` is number of bathrooms and `age` is age of the house in years.
+
+
+```{r}
+#Adding variables
+Q2_model2 <- lm(formula = log(price) ~-1 + log(dist) + log(intst) + log(area) + log(land) + rooms + baths + age, data = houseprice)
+#Data model
+visreg::visreg(Q2_model2)
+```
+```{r}
+#Data summary
+library(stargazer)
+stargazer(Q2_model1, Q2_model2,type="text", header = FALSE, ci = TRUE, ci.level = 0.9)
+```
+Conclusion: Distance from the incinerator largely effects the price of the house, the further the house is the higher the price, and it is statistically significant at the 90% confidence interval, p<0.01
